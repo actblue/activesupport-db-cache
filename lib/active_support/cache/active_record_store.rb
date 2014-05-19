@@ -72,10 +72,10 @@ module ActiveSupport
 
       def write_entry(key, entry, options)
         options = options.clone.symbolize_keys
-        item = CacheItem.find_or_initialize_by_key(key)
+        item = CacheItem.find_or_initialize_by(key: key)
         item.debug_mode = debug_mode?
         item.value = entry.value
-        item.expires_at = options[:expires_in].try(:since)
+        item.expires_at = options[:expires_in].since if options[:expires_in]
         item.save
 
         free_some_space

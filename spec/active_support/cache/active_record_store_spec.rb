@@ -72,7 +72,7 @@ describe ActiveRecordStore do
       describe "#fetch" do
         it "should return calculate if missed" do
           @store.delete(:foo)
-          obj = mock(:obj)
+          obj = double(:obj)
           obj.should_receive(:func).and_return(123)
 
           @store.fetch(:foo) { obj.func }.should eq(123)
@@ -80,7 +80,7 @@ describe ActiveRecordStore do
 
         it "should read data from cache if hit" do
           @store.write(:foo, 123)
-          obj = mock(:obj)
+          obj = double(:obj)
           obj.should_not_receive(:func)
 
           @store.fetch(:foo) { obj.func }.should eq(123)
