@@ -17,9 +17,9 @@ ActiveRecord::Base.connection.add_index(:cache_items, :key, :unique => true)
 ActiveRecord::Base.connection.add_index(:cache_items, :created_at)
 ActiveRecord::Base.connection.add_index(:cache_items, :updated_at)
 
-require 'logger'
-logfile = File.open(File.expand_path("../../log/test.log", __FILE__), 'a')
-ActiveRecord::Base.logger = Logger.new(logfile)
+# require 'logger'
+# logfile = File.open(File.expand_path("../../log/test.log", __FILE__), 'a')
+# ActiveRecord::Base.logger = Logger.new(logfile)
 
 Dir['./spec/support/*.rb'].map {|f| require f }
 
