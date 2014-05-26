@@ -72,20 +72,24 @@ module ActiveSupport
           item.meta_info[:access_time] = Time.now
           item.save
         end
-
         item
+      rescue => e
+        logger.error("ActiveRecordStore Error (#{e}): #{e.message}") if logger
+        nil
       end
 
       def write_entry(key, entry, options)
+        free_some_space
+
         options = options.clone.symbolize_keys
         item = CacheItem.find_or_initialize_by(key: key)
         item.debug_mode = debug_mode?
         item.value = entry.value
         item.expires_at = options[:expires_in].since if options[:expires_in]
         item.save
+        true
       rescue ActiveRecord::RecordNotUnique
-      ensure
-        free_some_space
+        false
       end
 
       def debug_mode?
