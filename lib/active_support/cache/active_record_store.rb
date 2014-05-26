@@ -24,7 +24,7 @@ module ActiveSupport
           debug_mode
         end
 
-        DEFAULT_META_INFO = { :version => 0, :access_counter => 0 }
+        DEFAULT_META_INFO = {:version => 0, :access_counter => 0}
 
         def value
           Marshal.load(::Base64.decode64(self[:value])) if self[:value].present?
@@ -57,39 +57,63 @@ module ActiveSupport
       end
 
       def clear
-        CacheItem.delete_all
+        CacheItem.transaction(requires_new: true) do
+          begin
+            CacheItem.delete_all
+          rescue => e
+            logger.error("ActiveRecordStore Error (#{e}): #{e.message}") if logger
+          end
+        end
       end
 
       def delete_entry(key, options)
-        CacheItem.delete_all(:key => key)
+        CacheItem.transaction(requires_new: true) do
+          begin
+            CacheItem.delete_all(:key => key)
+          rescue => e
+            logger.error("ActiveRecordStore Error (#{e}): #{e.message}") if logger
+          end
+        end
+
       end
 
       def read_entry(key, options={})
-        item = CacheItem.find_by_key(key)
+        CacheItem.transaction(requires_new: true) do
+          begin
+            item = CacheItem.find_by_key(key)
 
-        if item.present? && debug_mode?
-          item.meta_info[:access_counter] += 1
-          item.meta_info[:access_time] = Time.now
-          item.save
+            if item.present? && debug_mode?
+              item.meta_info[:access_counter] += 1
+              item.meta_info[:access_time] = Time.now
+              item.save
+            end
+            item
+          rescue => e
+            logger.error("ActiveRecordStore Error (#{e}): #{e.message}") if logger
+            nil
+          end
         end
-        item
-      rescue => e
-        logger.error("ActiveRecordStore Error (#{e}): #{e.message}") if logger
-        nil
       end
 
       def write_entry(key, entry, options)
-        free_some_space
 
-        options = options.clone.symbolize_keys
-        item = CacheItem.find_or_initialize_by(key: key)
-        item.debug_mode = debug_mode?
-        item.value = entry.value
-        item.expires_at = options[:expires_in].since if options[:expires_in]
-        item.save
-        true
-      rescue ActiveRecord::RecordNotUnique
-        false
+        CacheItem.transaction(requires_new: true) do
+          free_some_space
+        end
+
+        CacheItem.transaction(requires_new: true) do
+          begin
+            options = options.clone.symbolize_keys
+            item = CacheItem.find_or_initialize_by(key: key)
+            item.debug_mode = debug_mode?
+            item.value = entry.value
+            item.expires_at = options[:expires_in].since if options[:expires_in]
+            item.save
+          rescue ActiveRecord::RecordNotUnique
+            return false
+          end
+          return true
+        end
       end
 
       def debug_mode?
@@ -99,6 +123,7 @@ module ActiveSupport
       private
 
       def free_some_space
+
         # free some space
         if CacheItem.count >= ITEMS_LIMIT
           # remove expired
@@ -108,8 +133,10 @@ module ActiveSupport
           oldest_updated_at = CacheItem.select(:updated_at).order(:updated_at).offset((ITEMS_LIMIT.to_f * 0.2).round).first.try(:updated_at)
           CacheItem.where("updated_at < ?", oldest_updated_at).delete_all
         end
+
       end
     end
   end
 end
+
 
