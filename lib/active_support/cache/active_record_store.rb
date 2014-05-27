@@ -57,29 +57,29 @@ module ActiveSupport
       end
 
       def clear
-        CacheItem.transaction(requires_new: true) do
-          begin
+#        CacheItem.transaction(requires_new: true) do
+#          begin
             CacheItem.delete_all
-          rescue => e
-            logger.error("ActiveRecordStore Error (#{e}): #{e.message}") if logger
-          end
-        end
+#          rescue => e
+#            logger.error("ActiveRecordStore Error (#{e}): #{e.message}") if logger
+#          end
+ #       end
       end
 
       def delete_entry(key, options)
-        CacheItem.transaction(requires_new: true) do
-          begin
+#        CacheItem.transaction(requires_new: true) do
+#          begin
             CacheItem.delete_all(:key => key)
-          rescue => e
-            logger.error("ActiveRecordStore Error (#{e}): #{e.message}") if logger
-          end
-        end
+#          rescue => e
+#            logger.error("ActiveRecordStore Error (#{e}): #{e.message}") if logger
+#          end
+#        end
 
       end
 
       def read_entry(key, options={})
-        CacheItem.transaction(requires_new: true) do
-          begin
+#        CacheItem.transaction(requires_new: true) do
+#          begin
             item = CacheItem.find_by_key(key)
 
             if item.present? && debug_mode?
@@ -88,32 +88,32 @@ module ActiveSupport
               item.save
             end
             item
-          rescue => e
-            logger.error("ActiveRecordStore Error (#{e}): #{e.message}") if logger
-            nil
-          end
-        end
+#          rescue => e
+#            logger.error("ActiveRecordStore Error (#{e}): #{e.message}") if logger
+#            nil
+#          end
+#        end
       end
 
       def write_entry(key, entry, options)
 
-        CacheItem.transaction(requires_new: true) do
+#        CacheItem.transaction(requires_new: true) do
           free_some_space
-        end
+#        end
 
-        CacheItem.transaction(requires_new: true) do
-          begin
+#        CacheItem.transaction(requires_new: true) do
+#          begin
             options = options.clone.symbolize_keys
             item = CacheItem.find_or_initialize_by(key: key)
             item.debug_mode = debug_mode?
             item.value = entry.value
             item.expires_at = options[:expires_in].since if options[:expires_in]
             item.save
-          rescue ActiveRecord::RecordNotUnique
-            return false
-          end
-          return true
-        end
+#          rescue ActiveRecord::RecordNotUnique
+#            return false
+#          end
+#          return true
+#        end
       end
 
       def debug_mode?
