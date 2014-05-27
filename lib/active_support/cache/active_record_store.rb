@@ -57,29 +57,14 @@ module ActiveSupport
       end
 
       def clear
-#        CacheItem.transaction(requires_new: true) do
-#          begin
         CacheItem.delete_all
-#          rescue => e
-#            logger.error("ActiveRecordStore Error (#{e}): #{e.message}") if logger
-#          end
-#       end
       end
 
       def delete_entry(key, options)
-#        CacheItem.transaction(requires_new: true) do
-#          begin
         CacheItem.delete_all(:key => key)
-#          rescue => e
-#            logger.error("ActiveRecordStore Error (#{e}): #{e.message}") if logger
-#          end
-#        end
-
       end
 
       def read_entry(key, options={})
-#        CacheItem.transaction(requires_new: true) do
-#          begin
         item = CacheItem.find_by_key(key)
 
         if item.present? && debug_mode?
@@ -88,21 +73,20 @@ module ActiveSupport
           item.save
         end
         item
-#          rescue => e
-#            logger.error("ActiveRecordStore Error (#{e}): #{e.message}") if logger
-#            nil
-#          end
-#        end
       end
 
       def write_entry(key, entry, options)
         free_some_space
-        options = options.clone.symbolize_keys
-        item = CacheItem.lock.find_or_initialize_by(key: key)
-        item.debug_mode = debug_mode?
-        item.value = entry.value
-        item.expires_at = options[:expires_in].since if options[:expires_in]
-        item.save
+
+        CacheItem.transaction(requires_new: true) do
+          options = options.clone.symbolize_keys
+          item = CacheItem.lock('LOCK TABLES cache_items IN ACCESS EXCLUSIVE MODE').find_or_initialize_by(key: key)
+          item.debug_mode = debug_mode?
+          item.value = entry.value
+          item.expires_at = options[:expires_in].since if options[:expires_in]
+          item.save
+        end
+
       end
 
       def debug_mode?
