@@ -80,13 +80,22 @@ module ActiveSupport
       end
 
       def write_entry(key, entry, options)
+
         free_some_space
-        options = options.clone.symbolize_keys
-        item = CacheItem.find_or_initialize_by(key: key)
-        item.debug_mode = debug_mode?
-        item.value = entry.value
-        item.expires_at = options[:expires_in].since if options[:expires_in]
-        item.save
+
+        begin
+          CacheItem.transaction(:requires_new => true) do
+            options = options.clone.symbolize_keys
+            item = CacheItem.find_or_initialize_by(key: key)
+            item.debug_mode = debug_mode?
+            item.value = entry.value
+            item.expires_at = options[:expires_in].since if options[:expires_in]
+            item.save
+          end
+        rescue => e
+          logger.error("ActiveRecordStore Error (#{e}): #{e.message}") if logger
+          false
+        end
 
       end
 
@@ -97,15 +106,22 @@ module ActiveSupport
       private
 
       def free_some_space
+        begin
+          CacheItem.transaction(:requires_new => true) do
 
-        # free some space
-        if CacheItem.count >= ITEMS_LIMIT
-          # remove expired
-          CacheItem.where("expires_at < ?", Time.now).delete_all
+            # free some space
+            if CacheItem.count >= ITEMS_LIMIT
+              # remove expired
+              CacheItem.where("expires_at < ?", Time.now).delete_all
 
-          # remove old items
-          oldest_updated_at = CacheItem.select(:updated_at).order(:updated_at).offset((ITEMS_LIMIT.to_f * 0.2).round).first.try(:updated_at)
-          CacheItem.where("updated_at < ?", oldest_updated_at).delete_all
+              # remove old items
+              oldest_updated_at = CacheItem.select(:updated_at).order(:updated_at).offset((ITEMS_LIMIT.to_f * 0.2).round).first.try(:updated_at)
+              CacheItem.where("updated_at < ?", oldest_updated_at).delete_all
+            end
+
+          end
+        rescue => e
+          logger.error("ActiveRecordStore Error (#{e}): #{e.message}") if logger
         end
 
       end
