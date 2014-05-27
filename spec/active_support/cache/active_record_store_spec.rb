@@ -67,6 +67,14 @@ describe ActiveRecordStore do
         it "should read data if hit" do
           @store.read("foo").should eq(123)
         end
+
+        it "should return nil if there is a problem with de-marshalling data" do
+          entry = double
+          @store.stub(:debug_mode?).and_return(false)
+          ActiveRecordStore::CacheItem.stub(:find_by_key).with("foo").and_return(entry)
+          entry.should_receive(:value).and_raise('cannot de-marshall data')
+          @store.read("foo").should be_nil
+        end
       end
 
       describe "#fetch" do

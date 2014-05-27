@@ -72,7 +72,11 @@ module ActiveSupport
           item.meta_info[:access_time] = Time.now
           item.save
         end
+
+        item.value
         item
+      rescue => e
+        nil
       end
 
       def write_entry(key, entry, options)
