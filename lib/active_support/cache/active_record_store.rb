@@ -80,7 +80,8 @@ module ActiveSupport
 
         CacheItem.transaction(requires_new: true) do
           options = options.clone.symbolize_keys
-          item = CacheItem.lock('LOCK TABLES cache_items IN ACCESS EXCLUSIVE MODE').find_or_initialize_by(key: key)
+          CacheItem.lock('LOCK TABLE cache_items IN ACCESS EXCLUSIVE MODE')
+          item = CacheItem.find_or_initialize_by(key: key)
           item.debug_mode = debug_mode?
           item.value = entry.value
           item.expires_at = options[:expires_in].since if options[:expires_in]
