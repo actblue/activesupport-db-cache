@@ -92,7 +92,7 @@ module ActiveSupport
             item.expires_at = options[:expires_in].since if options[:expires_in]
             item.save
           end
-        rescue ActiveRecord::RecordNotUnique => e
+        rescue ActiveRecord::RecordNotUnique, PG::UniqueViolation => e
           logger.info("ActiveRecordStore Info (#{e}): #{e.message}") if logger
           false
         rescue => e
