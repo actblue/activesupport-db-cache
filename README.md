@@ -104,6 +104,10 @@ Display debug information for a cache item:
 
     > 
 
+## Tests
+
+bundle exec rspec
+
 ## Contributing
 
 1. Fork it
