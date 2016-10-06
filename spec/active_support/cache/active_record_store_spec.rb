@@ -140,6 +140,24 @@ describe ActiveRecordStore do
           end
         end
       end
+
+      describe 'configure database via new' do
+        before do
+          @store_a = ActiveRecordStore.new database_configuration: {adapter: 'sqlite3', database: 'db/test.sqlite3'}
+          @store_a.write('foo a', 'something')
+          expect(@store_a.read('foo a')).to eq('something')
+        end
+        describe 'use a different database' do
+          before do
+            @store_b = ActiveRecordStore.new database_configuration: {adapter: 'sqlite3', database: 'db/test_alternate.sqlite3'}
+            @store_b.write('foo b', 'something')
+          end
+          it 'should see values from second database only' do
+            expect(@store_b.read('foo a')).to be_nil
+            expect(@store_b.read('foo b')).to eq('something')
+          end
+        end
+      end
     end
   end
 end
