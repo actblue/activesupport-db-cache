@@ -9,6 +9,13 @@ module ActiveSupport
       # do not allow to store more items than
       ITEMS_LIMIT = 5000
 
+      def initialize(options = {})
+        if database_configuration = options.delete(:database_configuration)
+          ActiveSupport::Cache::ActiveRecordStore::CacheItem.establish_connection database_configuration
+        end
+        super
+      end
+
       # set database url:
       #   ENV['ACTIVE_RECORD_CACHE_STORE_DATABASE_URL'] = "sqlite3://./db/test2.sqlite3"
       class CacheItem < ActiveRecord::Base
