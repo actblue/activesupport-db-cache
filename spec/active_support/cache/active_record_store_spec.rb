@@ -15,30 +15,30 @@ describe ActiveRecordStore do
   [true, false].each do |debug_mode|
     describe "cache use when debug_mode='#{debug_mode}'" do
       before do
-        @store.stub(:debug_mode?).and_return(debug_mode)
+        allow(@store).to receive_message_chain(:debug_mode?).and_return(debug_mode)
       end
 
       it "should store numbers" do
         @store.write("foo", 123)
-        @store.read("foo").should eq(123)
+        expect(@store.read("foo")).to eq(123)
       end
 
       it "should store strings" do
         @store.write("foo", "bar string")
-        @store.read("foo").should eq("bar string")
+        expect(@store.read("foo")).to eq("bar string")
       end
 
       it "should store hash" do
         @store.write("foo", { :a => 123 })
-        @store.read("foo").keys.should include(:a)
-        @store.read("foo")[:a].should eq(123)
+        expect(@store.read("foo").keys).to include(:a)
+        expect(@store.read("foo")[:a]).to eq(123)
       end
 
       it "should expire entries" do
         @store.write :foo, 123, :expires_in => 5.minutes
-        @store.read(:foo).should eq(123)
+        expect(@store.read(:foo)).to eq(123)
         Timecop.travel 6.minutes.since do
-          @store.read(:foo).should be_blank
+          expect(@store.read(:foo)).to be_blank
         end
       end
 
@@ -52,7 +52,7 @@ describe ActiveRecordStore do
           ActiveRecordStore::CacheItem.count
         end
 
-        ActiveRecordStore::CacheItem.count.should <= 10
+        expect(ActiveRecordStore::CacheItem.count).to be <= 10
       end
 
       describe "#read" do
@@ -61,19 +61,19 @@ describe ActiveRecordStore do
         end
 
         it "should return nil if missed" do
-          @store.read("bar").should be_nil
+          expect(@store.read("bar")).to be_nil
         end
 
         it "should read data if hit" do
-          @store.read("foo").should eq(123)
+          expect(@store.read("foo")).to eq(123)
         end
 
         it "should return nil if there is a problem with de-marshalling data" do
           entry = double
-          @store.stub(:debug_mode?).and_return(false)
-          ActiveRecordStore::CacheItem.stub(:find_by_key).with("foo").and_return(entry)
-          entry.should_receive(:value).and_raise('cannot de-marshall data')
-          @store.read("foo").should be_nil
+          allow(@store).to receive_message_chain(:debug_mode?).and_return(false)
+          allow(ActiveRecordStore::CacheItem).to receive_message_chain(:find_by_key).with("foo").and_return(entry)
+          expect(entry).to receive(:value).and_raise('cannot de-marshall data')
+          expect(@store.read("foo")).to be_nil
         end
       end
 
@@ -81,17 +81,17 @@ describe ActiveRecordStore do
         it "should return calculate if missed" do
           @store.delete(:foo)
           obj = double(:obj)
-          obj.should_receive(:func).and_return(123)
+          expect(obj).to receive(:func).and_return(123)
 
-          @store.fetch(:foo) { obj.func }.should eq(123)
+          expect(@store.fetch(:foo) { obj.func }).to eq(123)
         end
 
         it "should read data from cache if hit" do
           @store.write(:foo, 123)
           obj = double(:obj)
-          obj.should_not_receive(:func)
+          expect(obj).not_to receive(:func)
 
-          @store.fetch(:foo) { obj.func }.should eq(123)
+          expect(@store.fetch(:foo) { obj.func }).to eq(123)
         end
       end
 
@@ -100,8 +100,8 @@ describe ActiveRecordStore do
           @store.write("foo", 123)
           @store.write("bar", "blah data")
           @store.clear
-          @store.read("foo").should be_blank
-          @store.read("bar").should be_blank
+          expect(@store.read("foo")).to be_blank
+          expect(@store.read("bar")).to be_blank
         end
       end
 
@@ -109,7 +109,7 @@ describe ActiveRecordStore do
         it "should delete entry" do
           @store.write("foo", 123)
           @store.delete("foo")
-          @store.read("foo").should be_blank
+          expect(@store.read("foo")).to be_blank
         end
       end
 
@@ -119,24 +119,24 @@ describe ActiveRecordStore do
         describe "item version" do
           it "should be 1 for a new cache item", :filter => true do
             @store.write(:foo, "foo")
-            meta_info_for(:foo).version.should eq(1)
+            expect(meta_info_for(:foo).version).to eq(1)
           end
 
           it "should be incremented after cache update" do
             @store.write(:foo, "bar")
-            meta_info_for(:foo).version.should eq(1)
+            expect(meta_info_for(:foo).version).to eq(1)
 
             @store.write(:foo, "123")
-            meta_info_for(:foo).version.should eq(2)
+            expect(meta_info_for(:foo).version).to eq(2)
 
             @store.write(:foo, "hoo")
-            meta_info_for(:foo).version.should eq(3)
+            expect(meta_info_for(:foo).version).to eq(3)
           end
 
           it "should not be incremented if no data change" do
             @store.write(:foo, "bar")
             @store.write(:foo, "bar")
-            meta_info_for(:foo).version.should eq(1)
+            expect(meta_info_for(:foo).version).to eq(1)
           end
         end
       end
