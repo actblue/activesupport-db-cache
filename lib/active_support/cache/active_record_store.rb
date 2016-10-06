@@ -61,7 +61,7 @@ module ActiveSupport
       end
 
       def delete_entry(key, options)
-        CacheItem.delete_all(:key => key)
+        CacheItem.where(key: key).delete_all
       end
 
       def read_entry(key, options={})
