@@ -71,7 +71,7 @@ For usage details see ActiveSupport::Cache
 
 ### External database
 
-By default ActiveRecordStore uses your ActiveRecord::Base.connection. If you whant to use some external database for cache pupose you should set ACTIVE_RECORD_CACHE_STORE_DATABASE_URL env variable:
+By default ActiveRecordStore uses your ActiveRecord::Base.connection. If you want to use some external database for cache purpose you should set ACTIVE_RECORD_CACHE_STORE_DATABASE_URL env variable:
 
     $ ACTIVE_RECORD_CACHE_STORE_DATABASE_URL="sqlite3://./db/test2.sqlite3" rails s
 
@@ -102,7 +102,9 @@ Display debug information for a cache item:
     $ rails c
     > ActiveSupport::Cache::ActiveRecordStore::CacheItem.find_by_key(:foo).meta_info
 
-    > 
+## Tests
+
+bundle exec rspec
 
 ## Contributing
 
