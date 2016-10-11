@@ -158,6 +158,20 @@ describe ActiveRecordStore do
           end
         end
       end
+
+      describe 'configure table name via new' do
+        before do
+          @store_a = ActiveRecordStore.new cache_store_table: 'another_table'
+        end
+        # because we assign the table name with ActiveSupport::Cache::ActiveRecordStore::CacheItem
+        # this is global for all instances.
+        after do
+          @store_a = ActiveRecordStore.new cache_store_table: 'cache_items'
+        end
+        it 'should raise exception' do
+          expect { @store_a.write('foo a', 'something') }.to raise_error(NameError)
+        end
+      end
     end
   end
 end

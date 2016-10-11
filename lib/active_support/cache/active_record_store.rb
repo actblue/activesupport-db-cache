@@ -13,6 +13,9 @@ module ActiveSupport
         if database_configuration = options.delete(:database_configuration)
           ActiveSupport::Cache::ActiveRecordStore::CacheItem.establish_connection database_configuration
         end
+        if cache_store_table = options.delete(:cache_store_table)
+          ActiveSupport::Cache::ActiveRecordStore::CacheItem.table_name = cache_store_table
+        end
         super
       end
 
