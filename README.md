@@ -102,7 +102,9 @@ Display debug information for a cache item:
     $ rails c
     > ActiveSupport::Cache::ActiveRecordStore::CacheItem.find_by_key(:foo).meta_info
 
-    > 
+## Tests
+
+bundle exec rspec
 
 ## Tests
 
