@@ -46,6 +46,10 @@ module ActiveSupport
           read_attribute(:expires_at).try(:past?) || false
         end
 
+        def mismatched?(version)
+          meta_info.fetch(:version, nil) && version && meta_info[:version] != version
+        end
+
         # From ActiveSupport::Cache::Store::Entry
         # Seconds since the epoch when the entry will expire.
         def expires_at
